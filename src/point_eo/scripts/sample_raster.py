@@ -2,6 +2,8 @@ import geopandas as gpd
 import rasterio as rio
 from pathlib import Path
 from pprint import pprint
+import xarray as xr
+import numpy as np
 
 
 def add_args(subparser):
@@ -29,12 +31,29 @@ def add_args(subparser):
 def main(args):
     # Read files
     gdf = gpd.read_file(args.input)
-    src = rio.open(args.input_raster, windowed=True)
-    print(f"Sampling raster {args.input_raster} using points from {args.input}")
 
     # Sample points
-    coords = [(x, y) for x, y in zip(gdf.geometry.x, gdf.geometry.y)]
-    gdf["rvalue"] = [x for x in src.sample(coords)]
+    # if input is a raster
+    if isinstance(args.input_raster, str):
+        print(f"Sampling raster {args.input_raster} using points from {args.input}")
+        src = rio.open(args.input_raster, windowed=True)
+        coords = [(x, y) for x, y in zip(gdf.geometry.x, gdf.geometry.y)]
+        gdf["rvalue"] = [x for x in src.sample(coords)]
+    elif isinstance(args.input_raster,xr.Dataset):
+        print(f"Sampling xarray dataset using points from {args.input}")
+        # if input is a dask xarray dataset
+        da_x = xr.DataArray(gdf.geometry.x.values, dims=['z'])
+        da_y = xr.DataArray(gdf.geometry.y.values, dims=['z'])
+        band_values = args.input_raster.sel(x=da_x, y=da_y, method='nearest')
+        nparr = band_values.to_array().as_numpy().values
+        newarr = np.transpose(nparr,axes=[2,0,1])
+        gdf["rvalue"] = [x.flatten() for x in newarr]
+    else:
+        raise Exception(
+            f"Unsupported input raster dataset!"
+        )        
+
+
 
     # Fix dataframe
     bands = [f"band{i}" for i in range(len(gdf["rvalue"][0]))]
@@ -72,7 +91,8 @@ def main(args):
         target = args.target
 
     gdf[bands] = gdf["rvalue"].values.tolist()
-    gdf[bands] = gdf[bands].astype(src.meta["dtype"])
+    if isinstance(args.input_raster, str):
+        gdf[bands] = gdf[bands].astype(src.meta["dtype"])
     gdf = gdf.drop(["rvalue"], axis=1)
 
     # Create df for csv
@@ -84,7 +104,10 @@ def main(args):
 
     # Saving
     shp_stem = Path(args.input).stem
-    raster_stem = Path(args.input_raster).stem
+    if isinstance(args.input_raster, str):
+        raster_stem = Path(args.input_raster).stem
+    else:
+        raster_stem = 'xarray'
 
     out_folder = Path(args.out_folder)
     out_folder.mkdir(parents=True, exist_ok=True)
