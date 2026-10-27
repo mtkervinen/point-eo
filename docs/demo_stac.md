@@ -25,10 +25,10 @@ The `sample_raster` command samples points from a raster, saving a chosen value 
 ```cmd
 point-eo sample_raster \
     --input data/points_clc.geojson \
-    --input_raster data/stac_sources/lataseno_stac_data_uint16.tif \
+    --input_raster data/stac_output/lataseno_stac_data_uint16.tif \
     --target corine \
     --out_folder stac_test_project/samples \
-    --band_names data/stac_sources/band_names.txt
+    --band_names data/stac_output/band_names.txt
 ```
 
 This produces a table of form
@@ -88,8 +88,11 @@ If your dataset has a lot of classes, the output rasters can be very large, as t
 With our test dataset the graphs look like this:
 
 ![Classification](../docs/images/02_classification.png)
+![Classification](../stac_test_project/analysis/demo_rf__lataseno_stac_data_uint16__points_clc__corine__2026-10-27T14-59-13_metrics.png)
 ![Confusion matrix](../docs/images/03_confusion.png)
+![Confusion matrix](../stac_test_project/analysis/demo_rf__lataseno_stac_data_uint16__points_clc__corine__2026-10-27T14-59-13_confusion.png)
 ![Permutation](../docs/images/04_permutation.png)
+![Permutation](../stac_test_project/analysis/demo_rf__lataseno_stac_data_uint16__points_clc__corine__2026-10-27T14-59-13_permutation_importance.png)
 
 See `point-eo analysis --help` for all parameters.
 
@@ -115,6 +118,14 @@ point-eo feature_selection \
     --n_features 5 \
     --direction 'forward' \
     --logistic_regression_coefficients
+
+point-eo feature_selection \
+    --input stac_test_project/samples/lataseno_stac_data_uint16__points_clc__corine.csv \
+    --out_prefix demo_ \
+    --out_folder stac_test_project/feature_selection \
+    --separator ',' \
+    --decimal '.' \
+    --remove_classes_smaller_than 6 \
 ```
 
 # 02. AutoML
