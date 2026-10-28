@@ -25,10 +25,10 @@ The `sample_raster` command samples points from a raster, saving a chosen value 
 ```cmd
 point-eo sample_raster \
     --input data/points_clc.geojson \
-    --input_raster data/stac_output/lataseno_stac_data_uint16.tif \
+    --input_raster data/stac_output/lataseno_stac_data_uint16_cog.tif \
     --target corine \
     --out_folder stac_test_project/samples \
-    --band_names data/stac_output/band_names.txt
+    --band_names data/stac_sources/band_names.txt
 ```
 
 This produces a table of form
@@ -64,7 +64,7 @@ The `analysis` -command fits a Random Forest to the data, and evaluates the mode
 
 ```cmd
 point-eo analysis \
-    --input stac_test_project/samples/lataseno_stac_data_uint16__points_clc__corine.csv \
+    --input stac_test_project/samples/lataseno_stac_data_uint16_cog__points_clc__corine.csv\
     --out_prefix demo_rf \
     --out_folder stac_test_project/analysis \
     --separator , \
@@ -88,11 +88,11 @@ If your dataset has a lot of classes, the output rasters can be very large, as t
 With our test dataset the graphs look like this:
 
 ![Classification](../docs/images/02_classification.png)
-![Classification](../stac_test_project/analysis/demo_rf__lataseno_stac_data_uint16__points_clc__corine__2026-10-27T14-59-13_metrics.png)
+![Classification](../stac_test_project/analysis/demo_rf__lataseno_stac_data_uint16_cog__points_clc__corine__2026-10-28T14-54-01_metrics.png)
 ![Confusion matrix](../docs/images/03_confusion.png)
-![Confusion matrix](../stac_test_project/analysis/demo_rf__lataseno_stac_data_uint16__points_clc__corine__2026-10-27T14-59-13_confusion.png)
+![Confusion matrix](../stac_test_project/analysis/demo_rf__lataseno_stac_data_uint16_cog__points_clc__corine__2026-10-28T14-54-01_confusion.png)
 ![Permutation](../docs/images/04_permutation.png)
-![Permutation](../stac_test_project/analysis/demo_rf__lataseno_stac_data_uint16__points_clc__corine__2026-10-27T14-59-13_permutation_importance.png)
+![Permutation](../stac_test_project/analysis/demo_rf__lataseno_stac_data_uint16_cog__points_clc__corine__2026-10-28T14-54-01_permutation_importance.png)
 
 See `point-eo analysis --help` for all parameters.
 
@@ -108,7 +108,7 @@ However, the usual caveats of interpreting linear model coefficients apply.
 
 ```cmd
 point-eo feature_selection \
-    --input stac_test_project/samples/lataseno_stac_data_uint16__points_clc__corine.csv \
+    --input stac_test_project/samples/lataseno_stac_data_uint16_cog__points_clc__corine.csv \
     --out_prefix demo_ \
     --out_folder stac_test_project/feature_selection \
     --separator ',' \
@@ -119,13 +119,6 @@ point-eo feature_selection \
     --direction 'forward' \
     --logistic_regression_coefficients
 
-point-eo feature_selection \
-    --input stac_test_project/samples/lataseno_stac_data_uint16__points_clc__corine.csv \
-    --out_prefix demo_ \
-    --out_folder stac_test_project/feature_selection \
-    --separator ',' \
-    --decimal '.' \
-    --remove_classes_smaller_than 6 \
 ```
 
 # 02. AutoML
@@ -134,7 +127,7 @@ A more thorough approach for finding a model can be done with the TPOT AutoML li
 
 ```cmd
 point-eo tpot_train \
-    --input stac_test_project/samples/lataseno_stac_data_uint16__points_clc__corine.csv \
+    --input stac_test_project/samples/lataseno_stac_data_uint16_cog__points_clc__corine.csv \
     --out_prefix tpot_demo \
     --out_folder stac_test_project/tpot_out_test \
     --generations 2 \
@@ -151,10 +144,10 @@ See `point-eo tpot_train --help` for all parameters.
 To produce a `pkl` file and evaluation figures, pass the TPOT model output to the `analysis` -script:
 
     point-eo analysis \
-        --input stac_test_project/samples/lataseno_stac_data_uint16__points_clc__corine.csv \
+        --input stac_test_project/samples/lataseno_stac_data_uint16_cog__points_clc__corine.csv \
         --out_prefix tpot_demo \
         --out_folder stac_test_project/tpot_analysis \
-        --tpot_model stac_test_project/tpot_out_test/tpot_demo_acc0.7701_260219T115559.py\
+        --tpot_model stac_test_project/tpot_out_test/tpot_demo_acc0.7723_261028T150509.py\
         --separator , \
         --decimal . \
         --remove_classes_smaller_than 6
@@ -165,8 +158,8 @@ Classifying the entire raster is done with the `predict` command
 
 ```cmd
 point-eo predict \
-    --model stac_test_project/tpot_analysis/tpot_demo__lataseno_stac_data_uint16__points_clc__corine__2026-02-19T11-57-08_model.pkl  \
-    --input_raster data/stac_sources/lataseno_stac_data_uint16.tif \
+    --model stac_test_project/tpot_analysis/tpot_demo__lataseno_stac_data_uint16_cog__points_clc__corine__2026-10-28T15-05-44_model.pkl  \
+    --input_raster data/stac_output/lataseno_stac_data_uint16_cog.tif \
     --cell_size 3000 \
     --cell_buffer 2  \
     --out_folder stac_test_project/predictions
@@ -176,8 +169,8 @@ If your raster is not rectangular, it is adviced to pass a geometry file to the 
 
 ```cmd
 point-eo predict \
-    --model stac_test_project/tpot_analysis/tpot_demo__lataseno_stac_data_uint16__points_clc__corine__2026-02-19T11-57-08_model.pkl \
-    --input_raster data/stac_sources/lataseno_stac_data_uint16.tif \
+    --model stac_test_project/tpot_analysis/tpot_demo__lataseno_stac_data_uint16_cog__points_clc__corine__2026-10-28T15-05-44_model.pkl\
+    --input_raster data/stac_output/lataseno_stac_data_uint16_cog.tif \
     --cell_size 3000 \
     --cell_buffer 2 \
     --out_folder stac_test_project/predictions_extent \
@@ -188,13 +181,13 @@ See `point-eo predict --help` for all parameters.
 
 The output is saved as patches to the `--out_folder`. The virtual raster can be changed to a normal raster with GDAL. You have to change the `gdal_merge.py` path to the path on your system.
 ```cmd
-python C:\\Users\\E1007914\\AppData\\Local\\miniconda3\\envs\\point-eo\\Scripts\\gdal_merge.py ^
--o test_project\\predictions\\demo.tif ^
--co "COMPRESS=LZW" ^
--co "BIGTIFF=YES" ^
--co "TILED=YES" ^
--ot "UInt16" ^
-test_project\\predictions\\s2_2018_lataseno__demo_rf__s2_2018_lataseno__points_clc__corine__2023-10-02T14-57-21_model_C.vrt
+gdal_merge.py \
+    -o stac_test_project/predictions/demo.tif \
+    -co "COMPRESS=LZW" \
+    -co "BIGTIFF=YES" \
+    -co "TILED=YES" \
+    -ot "UInt16" \
+    stac_test_project/predictions/lataseno_stac_data_uint16_cog__tpot_demo__lataseno_stac_data_uint16_cog__points_clc__corine__2026-10-28T15-05-44_model_C.vrt
 ```
 
 The prediction output is a raster with the (uncalibrated) class probabilities of the classifier. So if your dataset has N classes, the output raster has N channels. For example, the channel for CLC class 23 (broad-leaved forests) looks like this:
@@ -208,18 +201,18 @@ and CLC class 32 (sparsely vegetated areas) looks like this:
 ## Postprocessing
 Raster channels can be renamed from the class map that was created with the `analysis` -command:
 ```cmd
-point-eo set_band_description ^
-    --input_raster test_project\\predictions\\demo.tif ^
-    --label_map test_project\\analysis\\demo_rf__s2_2018_lataseno__points_clc__corine__2023-10-02T14-57-21_label_map.txt
+point-eo set_band_description \
+    --input_raster stac_test_project/predictions/demo.tif \
+    --label_map stac_test_project/analysis/demo_rf__lataseno_stac_data_uint16_cog__points_clc__corine__2026-10-28T14-54-01_label_map.txt
 ```
 
 Finally, we can calculate two single-channel rasters: the most probable class, and it's confidence with the command
 
 ```cmd
-point-eo postprocess_prediction ^
-    --input_raster test_project\\predictions\\demo.tif ^
-    --out_folder test_project\\predictions ^
-    --label_map test_project\\analysis\\demo_rf__s2_2018_lataseno__points_clc__corine__2023-10-02T14-57-21_label_map.txt
+point-eo postprocess_prediction \
+    --input_raster stac_test_project/predictions/demo.tif \
+    --out_folder stac_test_project/predictions \
+    --label_map stac_test_project/analysis/demo_rf__lataseno_stac_data_uint16_cog__points_clc__corine__2026-10-28T14-54-01_label_map.txt
 ```
 
 The files are named `demo_S.tif` for the classification and `demo_M.tif` for the maximum confidence raster.
